@@ -9,7 +9,7 @@ from tools import *
 
 FILENAME = "cpp_test"
 
-observer_path = FILENAME + "_observer_detail.csv"
+observer_path = "output_data/" + FILENAME + "_observer_detail.csv"
 raw_data_path = "data/" + FILENAME + ".csv"
 
 check_file_exists(observer_path)
