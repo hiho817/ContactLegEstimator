@@ -101,7 +101,7 @@ def calculate_force_Motor2RP(theta, troque_R, troque_L):
     for i in range(len(theta)):
         F_Rm[i], troque_beta[i] = calculate_force_Motor2RP_single(theta[i], troque_R[i], troque_L[i])
 
-    return F_Rm, -troque_beta
+    return F_Rm, troque_beta
 
 def check_file_exists(file_path):
     if not os.path.exists(file_path):
