@@ -22,6 +22,7 @@ include_directories(
 # Compile generated dynamics code
 add_library(quadruped_dynamics
     cpp/quadruped_dynamics.cpp
+    cpp/DisturbanceObserver.cpp
 )
 target_link_libraries(quadruped_dynamics Eigen3::Eigen)
 

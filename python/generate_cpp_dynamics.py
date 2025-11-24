@@ -91,11 +91,11 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
         sp.Derivative(functions['Rm_rh'], t): dRm_rh_sym,
         sp.Derivative(functions['beta_lh'], t): dbeta_lh_sym,
         sp.Derivative(functions['Rm_lh'], t): dRm_lh_sym,
-        # Inertia derivatives (set to zero for static inertias, or keep as symbols)
-        sp.Derivative(functions['I_c_lf'], t): 0,  # or dI_c_lf_sym
-        sp.Derivative(functions['I_c_rf'], t): 0,  # or dI_c_rf_sym
-        sp.Derivative(functions['I_c_rh'], t): 0,  # or dI_c_rh_sym
-        sp.Derivative(functions['I_c_lh'], t): 0,  # or dI_c_lh_sym
+        # Inertia derivatives
+        sp.Derivative(functions['I_c_lf'], t): dI_c_lf_sym,
+        sp.Derivative(functions['I_c_rf'], t): dI_c_rf_sym,
+        sp.Derivative(functions['I_c_rh'], t): dI_c_rh_sym,
+        sp.Derivative(functions['I_c_lh'], t): dI_c_lh_sym
     }
     
     # Substitute constants first, then functions
@@ -287,10 +287,9 @@ def generate_source(output_dir, replacements, reduced, M, C, G, D):
     cpp_code.append('')
     cpp_code.append('    // Compute gravity vector G')
     for i in range(12):
-        if reduced[idx] != 0:
-            cpp_str = sp.cxxcode(reduced[idx])
-            cpp_code.append(f'    G({i}) = {cpp_str};')
-            idx += 1
+        cpp_str = sp.cxxcode(reduced[idx])
+        cpp_code.append(f'    G({i}) = {cpp_str};')
+        idx += 1
     
     cpp_code.append('')
     cpp_code.append('    // Compute inertia rate matrix D (sparse)')
@@ -321,7 +320,7 @@ def generate_source(output_dir, replacements, reduced, M, C, G, D):
 
 if __name__ == '__main__':
     # Load equations
-    file_path = '../saved_equations/equations_dill.pkl'
+    file_path = 'saved_equations/equations_dill.pkl'
     equations = load_equations(file_path)
     
     # Generate C++ code

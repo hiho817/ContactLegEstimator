@@ -17,8 +17,8 @@ class RobotConfig:
         ROBOT_WEIGHT = BASE_WEIGHT + 4 * LEG_WEIGHT
 
         # Geometric parameters
-        X_OFFSET = 0.2263       # m - X offset of hip from base center
-        Y_OFFSET = 0.0465       # m - Y offset of hip from base center
+        X_OFFSET = 0.222       # m - X offset of hip from base center
+        Y_OFFSET = 0.193       # m - Y offset of hip from base center
     
     else:
         # Robot physical parameters
@@ -30,8 +30,8 @@ class RobotConfig:
         ROBOT_WEIGHT = BASE_WEIGHT + 4 * LEG_WEIGHT
 
         # Geometric parameters
-        X_OFFSET = 0.2263       # m - X offset of hip from base center
-        Y_OFFSET = 0.0465       # m - Y offset of hip from base center
+        X_OFFSET = 0.222       # m - X offset of hip from base center
+        Y_OFFSET = 0.193       # m - Y offset of hip from base center
 
     # Base inertias
     BODY_I_XX = BASE_WEIGHT * (BASE_LENGTH**2 + BASE_HEIGHT**2) / 12.0  # kg*m^2 - Body inertia around x-axis
