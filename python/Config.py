@@ -40,6 +40,12 @@ class RobotConfig:
     # Physical constants
     GRAVITY = 9.81          # m/s^2 - Gravitational acceleration
 
+    # Fitting polynomial coefficients
+    import numpy as np
+    A = np.array([-0.0035, 0.0110, 0.0030, 0.0500, -0.0132]) #rm_coeff
+    # B = np.array([0.0001, -0.0001, -0.0013, 0.0043, 0.0041]) #Io_coeff
+    B = np.array([1e-06, -1E-05, 0.0001, -0.0002, -0.0012, 0.0042, 0.0041]) #Ic_coeff
+
 class SensorConfig:
     """Sensor configuration parameters"""
 
