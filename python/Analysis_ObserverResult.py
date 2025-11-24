@@ -10,7 +10,7 @@ from tools import *
 FILENAME = "cpp_test"
 
 observer_path = FILENAME + "_observer_detail.csv"
-raw_data_path = "data/" + "trot" + ".csv"
+raw_data_path = "data/" + FILENAME + ".csv"
 
 check_file_exists(observer_path)
 check_file_exists(raw_data_path)
