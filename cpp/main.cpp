@@ -4,6 +4,8 @@
 #include <sstream>
 #include <cmath>
 #include <map>
+#include <chrono>
+#include <iomanip>
 #include "DisturbanceObserver.hpp"
 #include "Config.hpp"
 
@@ -450,6 +452,11 @@ int main(int argc, char** argv) {
         
         // Process data
         std::cout << "\nStarting data processing...\n";
+        
+        // Start timing
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        size_t processed_count = 0;
         for (size_t i = start_index; i < data.size(); ++i) {
             if (i % 100 == 0) {
                 std::cout << "Processing index: " << i << " / " << data.size() << "\r" << std::flush;
@@ -469,12 +476,24 @@ int main(int argc, char** argv) {
             );
             
             // Can use disturbance for further processing here
+            processed_count++;
         }
         
-        std::cout << "\n✓ Processing complete!\n";
+        // End timing
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end_time - start_time;
+        
+        std::cout << "\nProcessing complete\n";
         std::cout << "Results saved to cpp_test_observer_detail.csv\n";
-        std::cout << "\nTo analyze results, run from project root:\n";
-        std::cout << "  python3 python/Analysis_ObserverResult.py\n";
+        
+        // Display performance statistics
+        std::cout << "\n========== Performance Statistics ==========\n";
+        std::cout << std::fixed << std::setprecision(6);
+        std::cout << "Processed records: " << processed_count << "\n";
+        std::cout << "Elapsed time: " << elapsed.count() << " seconds\n";
+        std::cout << "Average time per record: " << (elapsed.count() / processed_count) << " seconds\n";
+        std::cout << "Processing speed: " << (processed_count / elapsed.count()) << " records/second\n";
+        std::cout << "==========================================\n";
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";

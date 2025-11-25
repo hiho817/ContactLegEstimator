@@ -4,5 +4,10 @@
     "cmake.configureOnOpen": true,
     "cmake.configureSettings": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+    },
+    "files.associations": {
+        "*.txt": "cmake",
+        "*.proto": "java",
+        "chrono": "cpp"
     }
 }
