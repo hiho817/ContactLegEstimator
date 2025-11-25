@@ -381,8 +381,8 @@ private:
     
     void calculate_motor_to_joint_torque(
         double theta, 
-        double torque_left, 
         double torque_right,
+        double torque_left, 
         double& torque_beta,
         double& force_Rm
     ) {
@@ -407,8 +407,8 @@ private:
         // Virtual work: force = (J_theta_inv)^T @ (J_eta_inv)^T @ [tau_R, tau_L]^T
         
         // (J_eta_inv)^T @ [tau_R, tau_L]^T = [[1, -1], [1, 1]] @ [tau_R, tau_L]^T
-        double temp1 = torque_right - torque_left;  // tau_R - tau_L
-        double temp2 = torque_right + torque_left;  // tau_R + tau_L
+        double temp1 = torque_left - torque_right;  // tau_L - tau_R
+        double temp2 = torque_left + torque_right;  // tau_L + tau_R
         
         // (J_theta_inv)^T @ [temp1, temp2]^T = [[1/dRm_dtheta, 0], [0, 1]] @ [temp1, temp2]^T
         if (std::abs(dRm_dtheta) < 1e-9) {

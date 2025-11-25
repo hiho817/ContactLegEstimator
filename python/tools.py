@@ -91,7 +91,7 @@ def calculate_force_RP2Motor(theta, F_Rm, troque_beta):
 
     return troque_R, troque_L
 
-def calculate_force_Motor2RP(theta, troque_R, troque_L):
+def calculate_force_Motor2RP(theta, troque_L, troque_R):
     
     # Initialize output arrays
     F_Rm = np.zeros_like(theta)
@@ -99,7 +99,7 @@ def calculate_force_Motor2RP(theta, troque_R, troque_L):
     
     # Process each element
     for i in range(len(theta)):
-        F_Rm[i], troque_beta[i] = calculate_force_Motor2RP_single(theta[i], troque_R[i], troque_L[i])
+        F_Rm[i], troque_beta[i] = calculate_force_Motor2RP_single(theta[i], troque_L[i], troque_R[i])
 
     return F_Rm, troque_beta
 
