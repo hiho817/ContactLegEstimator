@@ -389,7 +389,6 @@ private:
         double& force_Rm
     ) {
         // Convert motor torques to joint space using virtual work method
-        // Based on Python: calculate_force_Motor2RP_single
         
         // J_theta = [[dRm/dtheta, 0], [0, 1]]
         const auto& A = quadruped::Config::RM_COEFF;
@@ -402,9 +401,12 @@ private:
             theta_power *= theta;
         }
         
-        // J_eta = [[1/2, -1/2], [1/2, 1/2]]
-        // J_theta_inv = [[1/dRm_dtheta, 0], [0, 1]]
-        // J_eta_inv = [[1, 1], [-1, 1]]
+        // J_eta = [[1/2, -1/2], 
+        //          [1/2, 1/2]]
+        // J_theta_inv = [[1/dRm_dtheta, 0], 
+        //                [           0, 1]]
+        // J_eta_inv = [[1,  1], 
+        //              [-1, 1]]
         
         // Virtual work: force = (J_theta_inv)^T @ (J_eta_inv)^T @ [tau_R, tau_L]^T
         

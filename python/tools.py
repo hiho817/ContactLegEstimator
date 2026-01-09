@@ -51,7 +51,7 @@ def calculate_force_RP2Motor_single(theta, F_Rm, troque_beta):
     
     return force[0, 0], force[1, 0]
 
-def calculate_force_Motor2RP_single(theta, troque_R, troque_L):
+def calculate_force_Motor2RP_single(theta, troque_L, troque_R):
     """
     Calculate RP force and torque from single motor torque values.
     
@@ -75,7 +75,8 @@ def calculate_force_Motor2RP_single(theta, troque_R, troque_L):
     J_eta_inv = np.linalg.inv(J_eta)
 
     # 虛功法計算
-    force = J_theta_inv.transpose() @ J_eta_inv.transpose() @ np.array([[troque_R], [troque_L]])
+    force = J_theta_inv.transpose() @ J_eta_inv.transpose() @ np.array([[troque_R], 
+                                                                        [troque_L]])
 
     return force[0, 0], force[1, 0]
 
