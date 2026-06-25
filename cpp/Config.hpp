@@ -28,8 +28,8 @@ public:
     static constexpr double LEG_Y_OFFSET = 0.193;    // Leg offset in y-axis [m]
     
     // Base inertias (computed from dimensions)
-    static constexpr double BODY_I_XX = BASE_WEIGHT * (BASE_LENGTH * BASE_LENGTH + BASE_HEIGHT * BASE_HEIGHT) / 12.0;
-    static constexpr double BODY_I_YY = BASE_WEIGHT * (BASE_WIDTH * BASE_WIDTH + BASE_HEIGHT * BASE_HEIGHT) / 12.0;
+    static constexpr double BODY_I_XX = BASE_WEIGHT * (BASE_WIDTH * BASE_WIDTH + BASE_HEIGHT * BASE_HEIGHT) / 12.0;
+    static constexpr double BODY_I_YY = BASE_WEIGHT * (BASE_LENGTH * BASE_LENGTH + BASE_HEIGHT * BASE_HEIGHT) / 12.0;
     
     // Observer parameters
     static constexpr double OBSERVER_CUTOFF_FREQ = 15.0;  // Disturbance observer cutoff frequency [Hz]
@@ -41,15 +41,21 @@ public:
     
     // Polynomial coefficients for Rm calculation
     // Rm(theta) = A[0]*theta^4 + A[1]*theta^3 + A[2]*theta^2 + A[3]*theta + A[4]
-    static constexpr std::array<double, 5> RM_COEFF = {
-        -0.0035, 0.0110, 0.0030, 0.0500, -0.0132
-    };
+    static const std::array<double, 5>& RM_COEFF() {
+        static const std::array<double, 5> coeff = {
+            -0.0035, 0.0110, 0.0030, 0.0500, -0.0132
+        };
+        return coeff;
+    }
     
     // Polynomial coefficients for leg inertia calculation
     // Ic(theta) = B[0]*theta^6 + B[1]*theta^5 + ... + B[5]*theta + B[6]
-    static constexpr std::array<double, 7> IC_COEFF = {
-        1e-06, -1e-05, 0.0001, -0.0002, -0.0012, 0.0042, 0.0041
-    };
+    static const std::array<double, 7>& IC_COEFF() {
+        static const std::array<double, 7> coeff = {
+            1e-06, -1e-05, 0.0001, -0.0002, -0.0012, 0.0042, 0.0041
+        };
+        return coeff;
+    }
     
     // ============================================================
     // OFFLINE PARAMETERS (used only in offline processing mode)

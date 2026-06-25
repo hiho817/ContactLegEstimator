@@ -1,14 +1,71 @@
 import dill
 import sympy as sp
 from sympy import cse
+from sympy.core.function import AppliedUndef
 from pathlib import Path
-import numpy as np
 from Config import RobotConfig
 
 def load_equations(filepath):
-    """Load equations from .dill file"""
+    """Load legacy dill equations or the portable srepr-based schema."""
     with open(filepath, 'rb') as f:
-        return dill.load(f)
+        equations = dill.load(f)
+
+    if equations.get('serialization') != 'sympy-srepr-v1':
+        return equations
+
+    decoded = {}
+    for key, value in equations.items():
+        if key in {'serialization', 'model_assumptions'}:
+            decoded[key] = value
+        elif key in {'symbols', 'functions'}:
+            decoded[key] = {
+                name: sp.sympify(expression)
+                for name, expression in value.items()
+            }
+        else:
+            decoded[key] = sp.sympify(value)
+    return decoded
+
+def validate_equations(M, C, G, D):
+    """Fail before code generation when the serialized model is inconsistent."""
+    if M.rows != M.cols:
+        raise ValueError(f"M must be square, got {M.shape}")
+
+    n = M.rows
+    expected_matrix_shape = (n, n)
+    if C.shape != expected_matrix_shape:
+        raise ValueError(f"C must have shape {expected_matrix_shape}, got {C.shape}")
+    if D.shape != expected_matrix_shape:
+        raise ValueError(f"D must have shape {expected_matrix_shape}, got {D.shape}")
+    if G.shape not in ((n, 1), (n,)):
+        raise ValueError(f"G must have {n} elements, got {G.shape}")
+
+    if sp.simplify(M - M.T) != sp.zeros(n, n):
+        raise ValueError("Serialized mass matrix M is not symmetric")
+
+    return n
+
+
+def validate_substituted_expressions(expressions, allowed_symbols):
+    """Ensure generated C++ cannot contain unresolved SymPy functions."""
+    unresolved_functions = set()
+    unresolved_derivatives = set()
+    free_symbols = set()
+
+    for expression in expressions:
+        unresolved_functions.update(expression.atoms(AppliedUndef))
+        unresolved_derivatives.update(expression.atoms(sp.Derivative))
+        free_symbols.update(expression.free_symbols)
+
+    unexpected_symbols = free_symbols - allowed_symbols
+    if unresolved_functions or unresolved_derivatives or unexpected_symbols:
+        raise ValueError(
+            "Unresolved symbolic content after substitution: "
+            f"functions={sorted(map(str, unresolved_functions))}, "
+            f"derivatives={sorted(map(str, unresolved_derivatives))}, "
+            f"symbols={sorted(map(str, unexpected_symbols))}"
+        )
+
 
 def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     """
@@ -21,7 +78,11 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     M = equations_dict['M']
     C = equations_dict['C']
     G = equations_dict['G']
-    D = equations_dict['D']
+    # Runtime model intentionally omits the explicit inertia-rate force.
+    # The pickle may retain D_exact for approximation-error analysis, but the
+    # generated implementation always exports D = 0.
+    D = sp.zeros(M.rows, M.cols)
+    n = validate_equations(M, C, G, D)
     
     # Get symbols and functions
     symbols = equations_dict['symbols']
@@ -57,9 +118,6 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     # Inertias as symbols (not functions)
     I_c_lf_sym, I_c_rf_sym, I_c_rh_sym, I_c_lh_sym = sp.symbols('I_c_lf I_c_rf I_c_rh I_c_lh', real=True, positive=True)
     
-    # Inertia derivatives (set to zero for now, or keep as symbols)
-    dI_c_lf_sym, dI_c_rf_sym, dI_c_rh_sym, dI_c_lh_sym = sp.symbols('dI_c_lf dI_c_rf dI_c_rh dI_c_lh', real=True)
-    
     # Substitution mapping
     func_to_sym = {
         functions['x']: x_sym,
@@ -91,11 +149,6 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
         sp.Derivative(functions['Rm_rh'], t): dRm_rh_sym,
         sp.Derivative(functions['beta_lh'], t): dbeta_lh_sym,
         sp.Derivative(functions['Rm_lh'], t): dRm_lh_sym,
-        # Inertia derivatives
-        sp.Derivative(functions['I_c_lf'], t): dI_c_lf_sym,
-        sp.Derivative(functions['I_c_rf'], t): dI_c_rf_sym,
-        sp.Derivative(functions['I_c_rh'], t): dI_c_rh_sym,
-        sp.Derivative(functions['I_c_lh'], t): dI_c_lh_sym
     }
     
     # Substitute constants first, then functions
@@ -110,6 +163,20 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     C_const = C_const.subs(func_to_sym)
     G_const = G_const.subs(func_to_sym)
     D_const = D_const.subs(func_to_sym)
+
+    allowed_symbols = {
+        x_sym, z_sym, phi_sym, psi_sym,
+        beta_lf_sym, Rm_lf_sym, beta_rf_sym, Rm_rf_sym,
+        beta_rh_sym, Rm_rh_sym, beta_lh_sym, Rm_lh_sym,
+        dx_sym, dz_sym, dphi_sym, dpsi_sym,
+        dbeta_lf_sym, dRm_lf_sym, dbeta_rf_sym, dRm_rf_sym,
+        dbeta_rh_sym, dRm_rh_sym, dbeta_lh_sym, dRm_lh_sym,
+        I_c_lf_sym, I_c_rf_sym, I_c_rh_sym, I_c_lh_sym,
+    }
+    validate_substituted_expressions(
+        list(M_const) + list(C_const) + list(G_const) + list(D_const),
+        allowed_symbols,
+    )
     
     # CSE optimization
     print("Performing CSE optimization...")
@@ -118,21 +185,24 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     all_exprs = []
     
     # M matrix (only compute upper triangular part, since it's symmetric)
-    for i in range(12):
-        for j in range(i, 12):
+    for i in range(n):
+        for j in range(i, n):
             all_exprs.append(M_const[i, j])
     
-    # C matrix (only compute upper triangular part)
-    for i in range(12):
-        for j in range(i, 12):
+    # C is generally not symmetric: generate every element.
+    for i in range(n):
+        for j in range(n):
             all_exprs.append(C_const[i, j])
     
     # G vector
-    for i in range(12):
+    for i in range(n):
         all_exprs.append(G_const[i])
     
-    # D matrix (sparse, only compute non-zero elements)
-    # D only has a few non-zero elements on the diagonal
+    # D matrix. It is sparse in the current model, but including every element
+    # keeps the serialized equations as the single source of truth.
+    for i in range(n):
+        for j in range(n):
+            all_exprs.append(D_const[i, j])
     
     # Execute CSE
     replacements, reduced = cse(all_exprs, symbols=sp.numbered_symbols("tmp"))
@@ -140,12 +210,12 @@ def generate_cpp_dynamics(equations_dict, output_dir='generated'):
     print(f"Found {len(replacements)} common subexpressions")
     
     # Generate C++ code
-    generate_header(output_dir)
-    generate_source(output_dir, replacements, reduced, M_const, C_const, G_const, D_const)
+    generate_header(output_dir, n)
+    generate_source(output_dir, replacements, reduced, n)
     
-    print(f"✓ C++ code generated to {output_dir}/")
+    print(f"C++ code generated to {output_dir}/")
 
-def generate_header(output_dir):
+def generate_header(output_dir, n):
     """Generate .hpp header file"""
     header_code = """#pragma once
 
@@ -194,7 +264,7 @@ void compute_mass_matrix(
     with open(output_dir / 'quadruped_dynamics.hpp', 'w') as f:
         f.write(header_code)
 
-def generate_source(output_dir, replacements, reduced, M, C, G, D):
+def generate_source(output_dir, replacements, reduced, n):
     """Generate .cpp implementation file"""
     
     cpp_code = ['#include "quadruped_dynamics.hpp"',
@@ -261,8 +331,8 @@ def generate_source(output_dir, replacements, reduced, M, C, G, D):
     
     # Generate M matrix (utilizing symmetry)
     idx = 0
-    for i in range(12):
-        for j in range(i, 12):
+    for i in range(n):
+        for j in range(i, n):
             if reduced[idx] != 0:
                 cpp_str = sp.cxxcode(reduced[idx])
                 cpp_code.append(f'    M({i},{j}) = {cpp_str};')
@@ -275,27 +345,29 @@ def generate_source(output_dir, replacements, reduced, M, C, G, D):
     cpp_code.append('    C.setZero();')
     
     # Generate C matrix
-    for i in range(12):
-        for j in range(i, 12):
+    for i in range(n):
+        for j in range(n):
             if reduced[idx] != 0:
                 cpp_str = sp.cxxcode(reduced[idx])
                 cpp_code.append(f'    C({i},{j}) = {cpp_str};')
-                if i != j:
-                    cpp_code.append(f'    C({j},{i}) = C({i},{j});')
             idx += 1
     
     cpp_code.append('')
     cpp_code.append('    // Compute gravity vector G')
-    for i in range(12):
+    for i in range(n):
         cpp_str = sp.cxxcode(reduced[idx])
         cpp_code.append(f'    G({i}) = {cpp_str};')
         idx += 1
     
     cpp_code.append('')
-    cpp_code.append('    // Compute inertia rate matrix D (sparse)')
+    cpp_code.append('    // Compute inertia rate matrix D')
     cpp_code.append('    D.setZero();')
-    cpp_code.append('    // D only has specific non-zero diagonal elements')
-    cpp_code.append('    // This part requires dI_c/dt to be computed externally and passed in')
+    for i in range(n):
+        for j in range(n):
+            if reduced[idx] != 0:
+                cpp_str = sp.cxxcode(reduced[idx])
+                cpp_code.append(f'    D({i},{j}) = {cpp_str};')
+            idx += 1
     
     cpp_code.extend([
         '}',
@@ -319,11 +391,11 @@ def generate_source(output_dir, replacements, reduced, M, C, G, D):
         f.write('\n'.join(cpp_code))
 
 if __name__ == '__main__':
-    # Load equations
-    file_path = 'saved_equations/equations_dill.pkl'
+    repo_root = Path(__file__).resolve().parent.parent
+    file_path = repo_root / 'saved_equations' / 'equations_dill.pkl'
     equations = load_equations(file_path)
     
     # Generate C++ code
-    generate_cpp_dynamics(equations, output_dir='cpp')
+    generate_cpp_dynamics(equations, output_dir=repo_root / 'cpp')
     
     print("Done! Please check the cpp/ directory")

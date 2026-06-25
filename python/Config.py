@@ -34,8 +34,8 @@ class RobotConfig:
         Y_OFFSET = 0.193       # m - Y offset of hip from base center
 
     # Base inertias
-    BODY_I_XX = BASE_WEIGHT * (BASE_LENGTH**2 + BASE_HEIGHT**2) / 12.0  # kg*m^2 - Body inertia around x-axis
-    BODY_I_YY = BASE_WEIGHT * (BASE_WIDTH**2 + BASE_HEIGHT**2) / 12.0   # kg*m^2 - Body inertia around y-axis
+    BODY_I_XX = BASE_WEIGHT * (BASE_WIDTH**2 + BASE_HEIGHT**2) / 12.0  # kg*m^2 - Body inertia around x-axis
+    BODY_I_YY = BASE_WEIGHT * (BASE_LENGTH**2 + BASE_HEIGHT**2) / 12.0  # kg*m^2 - Body inertia around y-axis
 
     # Physical constants
     GRAVITY = 9.81          # m/s^2 - Gravitational acceleration

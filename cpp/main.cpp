@@ -182,7 +182,10 @@ public:
         double x_dot = calculate_velocity(data.sim_pos_x, last_sim_pos_x_);
         double z_dot = calculate_velocity(data.sim_pos_z, last_sim_pos_z_);
         
-        if (!first_call_) {
+        if (first_call_) {
+            x_dot = 0.0;
+            z_dot = 0.0;
+        } else {
             x_dot = (1.0 - low_pass_alpha_) * last_x_dot_ + low_pass_alpha_ * x_dot;
             z_dot = (1.0 - low_pass_alpha_) * last_z_dot_ + low_pass_alpha_ * z_dot;
         }
@@ -229,7 +232,16 @@ public:
         double theta_d_dot = calculate_velocity(data.state_theta_d, last_theta_d_);
         double beta_d_dot = calculate_velocity(data.state_beta_d, last_beta_d_);
         
-        if (!first_call_) {
+        if (first_call_) {
+            theta_a_dot = 0.0;
+            beta_a_dot = 0.0;
+            theta_b_dot = 0.0;
+            beta_b_dot = 0.0;
+            theta_c_dot = 0.0;
+            beta_c_dot = 0.0;
+            theta_d_dot = 0.0;
+            beta_d_dot = 0.0;
+        } else {
             theta_a_dot = (1.0 - low_pass_alpha_) * last_theta_a_dot_ + low_pass_alpha_ * theta_a_dot;
             beta_a_dot = (1.0 - low_pass_alpha_) * last_beta_a_dot_ + low_pass_alpha_ * beta_a_dot;
             theta_b_dot = (1.0 - low_pass_alpha_) * last_theta_b_dot_ + low_pass_alpha_ * theta_b_dot;
@@ -342,7 +354,7 @@ private:
     
     double theta_to_Rm(double theta) {
         // Polynomial evaluation: Rm = A[0]*theta^4 + A[1]*theta^3 + ... + A[4]
-        const auto& A = quadruped::Config::RM_COEFF;
+        const auto& A = quadruped::Config::RM_COEFF();
         double result = 0.0;
         double theta_power = 1.0;
         
@@ -356,7 +368,7 @@ private:
     
     double theta_dot_to_Rm_dot(double theta, double theta_dot) {
         // Derivative of polynomial: dRm/dt = (dRm/dtheta) * (dtheta/dt)
-        const auto& A = quadruped::Config::RM_COEFF;
+        const auto& A = quadruped::Config::RM_COEFF();
         double derivative = 0.0;
         double theta_power = 1.0;
         
@@ -370,7 +382,7 @@ private:
     
     double theta_to_Ic(double theta) {
         // Polynomial evaluation: Ic = B[0]*theta^6 + B[1]*theta^5 + ... + B[6]
-        const auto& B = quadruped::Config::IC_COEFF;
+        const auto& B = quadruped::Config::IC_COEFF();
         double result = 0.0;
         double theta_power = 1.0;
         
@@ -380,7 +392,7 @@ private:
         }
         return result;
     }
-    
+
     void calculate_motor_to_joint_torque(
         double theta, 
         double torque_right,
@@ -391,7 +403,7 @@ private:
         // Convert motor torques to joint space using virtual work method
         
         // J_theta = [[dRm/dtheta, 0], [0, 1]]
-        const auto& A = quadruped::Config::RM_COEFF;
+        const auto& A = quadruped::Config::RM_COEFF();
         
         // Compute dRm/dtheta using polynomial derivative
         double dRm_dtheta = 0.0;
@@ -451,6 +463,11 @@ int main(int argc, char** argv) {
         
         // Initialize data processor
         DataProcessor processor(dt);
+        if (start_index > 0 && static_cast<size_t>(start_index) < data.size()) {
+            // Prime finite-difference and low-pass-filter state with the sample
+            // immediately preceding the requested processing interval.
+            processor.process_record_data(data[start_index - 1]);
+        }
         
         // Process data
         std::cout << "\nStarting data processing...\n";

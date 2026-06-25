@@ -9,7 +9,7 @@ from tools import *
 
 FILENAME = "cpp_test"
 
-observer_path = "output_data/" + FILENAME + "_observer_detail.csv"
+observer_path = "output_data/" + FILENAME + "_observer_detail_baseline.csv"
 raw_data_path = "data/" + FILENAME + ".csv"
 
 check_file_exists(observer_path)
@@ -77,9 +77,9 @@ fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10), sharex=True
 
 # Leg LF
 ax1.plot(index, estimated_disturbance_rm_a, 'b-', label='Estimated Disturbance Rm LF', linewidth=1.5)
-ax1.plot(index, -raw_rm_a, 'b--', label='Raw Rm LF', linewidth=1)
+ax1.plot(index, raw_rm_a, 'b--', label='Raw Rm LF', linewidth=1)
 ax1.plot(index, estimated_disturbance_beta_a, 'g-', label='Estimated Disturbance Beta LF', linewidth=1.5)
-ax1.plot(index, -raw_beta_a, 'g--', label='Raw Beta LF', linewidth=1)
+ax1.plot(index, raw_beta_a, 'g--', label='Raw Beta LF', linewidth=1)
 ax1.set_title('Leg LF')
 ax1.set_ylabel('Rm')
 ax1.legend()
@@ -87,9 +87,9 @@ ax1.grid()
 
 # Leg RF
 ax2.plot(index, estimated_disturbance_rm_b, 'b-', label='Estimated Disturbance Rm RF', linewidth=1.5)
-ax2.plot(index, -raw_rm_b, 'b--', label='Raw Rm RF', linewidth=1)
+ax2.plot(index, raw_rm_b, 'b--', label='Raw Rm RF', linewidth=1)
 ax2.plot(index, estimated_disturbance_beta_b, 'g-', label='Estimated Disturbance Beta RF', linewidth=1.5)
-ax2.plot(index, -raw_beta_b, 'g--', label='Raw Beta RF', linewidth=1)
+ax2.plot(index, raw_beta_b, 'g--', label='Raw Beta RF', linewidth=1)
 ax2.set_title('Leg RF')
 ax2.set_ylabel('Rm')
 ax2.legend()
@@ -97,9 +97,9 @@ ax2.grid()
 
 # Leg RH
 ax3.plot(index, estimated_disturbance_rm_c, 'b-', label='Estimated Disturbance Rm RH', linewidth=1.5)
-ax3.plot(index, -raw_rm_c, 'b--', label='Raw Rm RH', linewidth=1)
+ax3.plot(index, raw_rm_c, 'b--', label='Raw Rm RH', linewidth=1)
 ax3.plot(index, estimated_disturbance_beta_c, 'g-', label='Estimated Disturbance Beta RH', linewidth=1.5)
-ax3.plot(index, -raw_beta_c, 'g--', label='Raw Beta RH', linewidth=1)
+ax3.plot(index, raw_beta_c, 'g--', label='Raw Beta RH', linewidth=1)
 ax3.set_title('Leg RH')
 ax3.set_ylabel('Rm')
 ax3.legend()
@@ -107,9 +107,9 @@ ax3.grid()
 
 # Leg LH
 ax4.plot(index, estimated_disturbance_rm_d, 'b-', label='Estimated Disturbance Rm LH', linewidth=1.5)
-ax4.plot(index, -raw_rm_d, 'b--', label='Raw Rm LH', linewidth=1)
+ax4.plot(index, raw_rm_d, 'b--', label='Raw Rm LH', linewidth=1)
 ax4.plot(index, estimated_disturbance_beta_d, 'g-', label='Estimated Disturbance Beta LH', linewidth=1.5)
-ax4.plot(index, -raw_beta_d, 'g--', label='Raw Beta LH', linewidth=1)
+ax4.plot(index, raw_beta_d, 'g--', label='Raw Beta LH', linewidth=1)
 ax4.set_title('Leg LH')
 ax4.set_xlabel('Index')
 ax4.set_ylabel('Rm')
