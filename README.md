@@ -242,8 +242,8 @@ The dynamics generation pipeline is:
 python/motion_equation.ipynb
   -> saved_equations/equations_dill.pkl
   -> python/generate_cpp_dynamics.py
-  -> cpp/quadruped_dynamics.hpp
-  -> cpp/quadruped_dynamics.cpp
+  -> cpp/simplify_dynamics.hpp
+  -> cpp/simplify_dynamics.cpp
 ```
 
 The generated C++ API is:
@@ -347,8 +347,8 @@ output_data/
 python/motion_equation.ipynb       Symbolic dynamics derivation
 saved_equations/equations_dill.pkl Serialized symbolic dynamics
 python/generate_cpp_dynamics.py    C++ dynamics generator
-cpp/quadruped_dynamics.cpp         Generated dynamics implementation
-cpp/quadruped_dynamics.hpp         Generated dynamics API
+cpp/simplify_dynamics.cpp         Generated dynamics implementation
+cpp/simplify_dynamics.hpp         Generated dynamics API
 cpp/DisturbanceObserver.cpp        Generalized-momentum observer
 cpp/main.cpp                       Offline CSV processing and runtime mapping
 cpp/Config.hpp                     Physical constants and fitted coefficients

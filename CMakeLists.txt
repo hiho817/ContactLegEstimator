@@ -20,18 +20,18 @@ include_directories(
 )
 
 # Compile generated dynamics code
-add_library(quadruped_dynamics
-    cpp/quadruped_dynamics.cpp
+add_library(simplify_dynamics
+    cpp/simplify_dynamics.cpp
     cpp/DisturbanceObserver.cpp
 )
-target_link_libraries(quadruped_dynamics Eigen3::Eigen)
+target_link_libraries(simplify_dynamics Eigen3::Eigen)
 
 # Main program
 add_executable(quadruped_observer
     cpp/main.cpp
 )
 target_link_libraries(quadruped_observer
-    quadruped_dynamics
+    simplify_dynamics
     Eigen3::Eigen
 )
 

@@ -140,7 +140,7 @@ Eigen::VectorXd DisturbanceObserver::estimate_disturbance(
         throw std::invalid_argument("I_c 維度必須為 4 (4 legs)");
     }
     // Compute robot dynamics
-    quadruped_dynamics::compute_dynamics(q, q_dot, I_c, M_, C_, G_, D_);
+    simplify_dynamics::compute_dynamics(q, q_dot, I_c, M_, C_, G_, D_);
     
     // === Discrete-time Disturbance Observer Core Algorithm ===
     
